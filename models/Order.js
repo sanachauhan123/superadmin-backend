@@ -11,10 +11,19 @@ const orderSchema = new mongoose.Schema({
       price: { type: Number, required: true }
     }
   ],
-  totalAmount: { type: Number, required: true },
+
+  // Billing breakdown
+  subtotal: { type: Number, default: 0 }, // before GST, service charge, discount
+  discount: { type: Number, default: 0 },     // % or absolute depending on your logic
+  serviceCharge: { type: Number, default: 0 },
+  cgst: { type: Number, default: 0 },
+  sgst: { type: Number, default: 0 },
+  igst: { type: Number, default: 0 },
+  totalAmount: { type: Number, required: true }, // final total after everything
+
   status: {
     type: String,
-    enum: ['pending', 'in-kitchen', 'served', 'completed', 'cancelled'],
+    enum: ['pending', 'in-kitchen', 'served', 'completed', 'cancelled', 'Paid'],
     default: 'pending'
   },
   createdAt: {

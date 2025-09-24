@@ -7,65 +7,63 @@ const { verifyRestaurant } = require('../middleware/auth');
 // ✅ Generate Invoice with GST, Service Charge, Total
 router.get('/:id', verifyRestaurant, async (req, res) => {
   try {
+    // 1️⃣ Fetch order & settings
     const order = await Order.findOne({
       _id: req.params.id,
       restaurantId: req.restaurantId,
     });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
 
-
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    const settings = await RestaurantSetting.findOne({ restaurantId: req.restaurantId });
-
-    if (!settings) {
-       console.log('❌ No settings found for this restaurant.');
+    const settings = await RestaurantSetting.findOne({
+      restaurantId: req.restaurantId,
+    });
+    if (!settings)
       return res.status(400).json({ error: 'Settings not found for this restaurant.' });
-    }
 
-    console.log('Settings:', settings);
-
+    // 2️⃣ Recalculate subtotal from items
     const subtotal = order.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-    const gstType = settings.gstType || 'none';
-    const serviceChargePercent = settings.serviceChargePercent || 0;
+    // 3️⃣ Apply discount/service/taxes from settings
+    const discount = order.discount || 0;
 
-    let cgst = 0;
-    let sgst = 0;
-    let igst = 0;
-    let serviceCharge = 0;
+    const serviceCharge = settings.serviceChargePercent
+      ? (subtotal * settings.serviceChargePercent) / 100
+      : 0;
 
-    if (gstType === 'intra-state') {
-      cgst = (subtotal * (settings.cgstPercent || 0)) / 100;
-      sgst = (subtotal * (settings.sgstPercent || 0)) / 100;
-    } else if (gstType === 'inter-state') {
-      igst = (subtotal * (settings.gstPercent || 0)) / 100;
-    }
+    const cgst = settings.cgstPercent ? (subtotal * settings.cgstPercent) / 100 : 0;
+    const sgst = settings.sgstPercent ? (subtotal * settings.sgstPercent) / 100 : 0;
+    const igst = settings.igstPercent ? (subtotal * settings.igstPercent) / 100 : 0;
 
-    serviceCharge = (subtotal * serviceChargePercent) / 100;
+    const totalAmount = subtotal - discount + serviceCharge + cgst + sgst + igst;
 
-    const total = subtotal + cgst + sgst + igst + serviceCharge;
+    // 4️⃣ Persist updated values back to the order
+    order.subtotal = subtotal;
+    order.discount = discount;
+    order.serviceCharge = serviceCharge;
+    order.cgst = cgst;
+    order.sgst = sgst;
+    order.igst = igst;
+    order.totalAmount = totalAmount;
+    await order.save();
 
+    // 5️⃣ Prepare billing object for the invoice
     const billing = {
       subtotal,
+      discount,
+      discountPercent: settings.defaultDiscountPercent || 0,
       cgst,
       sgst,
       igst,
       serviceCharge,
-      total,
+      total: totalAmount,
       currency: settings.currency || '₹',
       billFooter: settings.billFooter || '',
     };
 
-    res.json({
-      success: true,
-      order,
-      billing,
-    });
+    res.json({ success: true, order, billing });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -75,17 +73,46 @@ router.get('/:id', verifyRestaurant, async (req, res) => {
 // ✅ Mark Order as Paid
 router.put('/:id/pay', verifyRestaurant, async (req, res) => {
   try {
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, restaurantId: req.restaurantId },
-      { status: 'Paid' },
-      { new: true }
-    );
+    const { discountPercent = 0 } = req.body;
 
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+    const order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const settings = await RestaurantSetting.findOne({ restaurantId: req.restaurantId });
+    if (!settings) return res.status(400).json({ error: 'Settings not found' });
+
+    // Calculate billing
+    const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const serviceChargePercent = settings.serviceChargePercent || 0;
+    const gstType = settings.gstType || 'none';
+
+    let cgst = 0, sgst = 0, igst = 0;
+
+    if (gstType === 'intra-state') {
+      cgst = (subtotal * (settings.cgstPercent || 0)) / 100;
+      sgst = (subtotal * (settings.sgstPercent || 0)) / 100;
+    } else if (gstType === 'inter-state') {
+      igst = (subtotal * (settings.gstPercent || 0)) / 100;
     }
 
-    res.json({ success: true, message: 'Order marked as paid', data: order });
+    const serviceCharge = (subtotal * serviceChargePercent) / 100;
+    const discountAmount = (subtotal * discountPercent) / 100;
+
+    const totalAmount = subtotal + cgst + sgst + igst + serviceCharge - discountAmount;
+
+    // Update order
+    order.subtotal = subtotal;
+    order.cgst = cgst;
+    order.sgst = sgst;
+    order.igst = igst;
+    order.serviceCharge = serviceCharge;
+    order.discount = discountAmount;
+    order.totalAmount = totalAmount;
+    order.status = 'Paid';
+
+    await order.save();
+
+    res.json({ success: true, message: 'Order marked as paid', order });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

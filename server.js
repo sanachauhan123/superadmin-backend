@@ -55,6 +55,9 @@ app.use('/api/settings', settingRoutes);
 const dashboardRoutes = require('./routes/dashboard');
 app.use('/api/dashboard', dashboardRoutes);
 
+const userRoutes = require('./routes/user');
+app.use('/api/user', userRoutes);
+
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {

@@ -4,7 +4,7 @@ const Setting = require('../models/RestaurantSetting');
 const { verifyRestaurant } = require('../middleware/auth');
 
 // Get settings for the logged-in restaurant
-router.get('/', async (req, res) => {
+router.get('/', verifyRestaurant, async (req, res) => {
   try {
     const settings = await Setting.findOne({ restaurantId: req.restaurantId });
 

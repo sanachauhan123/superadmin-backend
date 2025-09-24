@@ -4,14 +4,18 @@ const Order = require('../models/Order');
 const { verifyRestaurant } = require('../middleware/auth');
 
 // Get all orders (for Super Admin)
-router.get('/',verifyRestaurant, async (req, res) => {
+router.get('/', verifyRestaurant, async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    // Fetch only orders for the logged-in restaurant
+    const orders = await Order.find({ restaurantId: req.restaurantId })
+                              .sort({ createdAt: -1 });
+
     res.json({ success: true, data: orders });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Create order
 router.post('/', verifyRestaurant, async (req, res) => {
