@@ -46,6 +46,9 @@ app.use('/api/orders', orderRoutes);
 const postOrderRoutes = require('./routes/pastorders');
 app.use('/api/pastorders', postOrderRoutes);
 
+const completeOrderRoutes = require('./routes/completeorders');
+app.use('/api/completeorders', completeOrderRoutes);
+
 const billingRoutes = require('./routes/billing');
 app.use('/api/billing', billingRoutes);
 
