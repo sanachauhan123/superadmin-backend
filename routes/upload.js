@@ -1,44 +1,30 @@
-import express from 'express';
-import multer from 'multer';
-import { verifyRestaurant } from '../middleware/auth.js';
-import cloudinary from '../config/cloudinary.js';
-import fs from 'fs';
-
+const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const { verifyRestaurant } = require('../middleware/auth');
 
-// Use multer in memory (no local storage)
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// POST /api/upload
-router.post('/', verifyRestaurant, upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    // Upload buffer to Cloudinary
-    const result = await cloudinary.uploader.upload_stream(
-      { folder: 'restaurantApp' },
-      (error, result) => {
-        if (error) {
-          console.error('Cloudinary upload error:', error);
-          return res.status(500).json({ error: 'Upload failed' });
-        }
-        res.json({ success: true, imageUrl: result.secure_url });
-      }
-    );
-
-    // Convert buffer to stream
-    const stream = require('stream');
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(req.file.buffer);
-    bufferStream.pipe(result);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Upload failed' });
-  }
+// ✅ Storage setup (Uploads to /uploads folder)
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Make sure this folder exists
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
+  },
 });
 
-export default router;
+const upload = multer({ storage });
+
+// ✅ POST /api/upload
+router.post('/', verifyRestaurant, upload.single('image'), async(req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  // const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const imageUrl = req.file.filename;
+  res.json({ success: true, imageUrl });
+});
+
+module.exports = router;
