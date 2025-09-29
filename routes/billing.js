@@ -1,23 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Pastorder = require('../models/Pastorder');
+const Completeorder = require('../models/Completeorder');
 const RestaurantSetting = require('../models/RestaurantSetting');
 const { verifyRestaurant } = require('../middleware/auth');
 
 // ✅ Generate Invoice with GST, Service Charge, Total
 router.get('/:id', verifyRestaurant, async (req, res) => {
   try {
+    console.log('resId',req.restaurantId);
+    console.log('ID', req.params.id)
     // 1️⃣ Fetch order & settings
-    let order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
+    let order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId});
 console.log('Order', order);
 
 if (!order) {
-    order = await Pastorder.findOne({ _id: req.params.id, restaurantId: req.restaurantId});
+    order = await Pastorder.findOne({ _id: req.params.id});
     console.log('Pastorder', order);
 }
 
 if (!order) {
-    order = await Completeorder.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
+    order = await Completeorder.findOne({ _id: req.params.id });
     console.log('CompleteOrder', order);
 }
 
@@ -86,7 +90,7 @@ router.put('/:id/pay', verifyRestaurant, async (req, res) => {
 
     let order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
     if (!order) {
-    order = await Completeorder.findOne({ _id: req.params.id, restaurantId: req.restaurantId});
+    order = await Completeorder.findOne({ _id: req.params.id});
 }
     if (!order) return res.status(404).json({ error: 'Order not found' });
     const settings = await RestaurantSetting.findOne({ restaurantId: req.restaurantId });

@@ -1,45 +1,68 @@
 const express = require('express');
 const router = express.Router();
 const { verifyRestaurant } = require('../middleware/auth');
-const Order = require('../models/Order');
+const Pastorder = require('../models/Order');
 
-router.get('/', async (req, res) => {
+router.get('/', verifyRestaurant, async (req, res) => {
   try {
     const restaurantId = req.restaurantId;
 
-   const today = new Date();
-today.setUTCHours(0, 0, 0, 0);
+    // --- Calculate dates in IST ---
+    const now = new Date();
+    const istOffset = 5.5 * 60; // IST = UTC+5:30 in minutes
+    const nowIST = new Date(now.getTime() + istOffset * 60000);
 
-// Get start of the week in UTC
-const startOfWeek = new Date(today);
-startOfWeek.setUTCDate(today.getUTCDate() - today.getUTCDay());
+    // Start of today IST
+    const startOfToday = new Date(
+      nowIST.getFullYear(),
+      nowIST.getMonth(),
+      nowIST.getDate(),
+      0, 0, 0, 0
+    );
 
-// Get start of the month in UTC
-const startOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfToday.getDate() + 1);
 
-   const [salesToday] = await Order.aggregate([
-  { $match: { restaurantId, status: 'served', createdAt: { $gte: today } } },
-  { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-]);
-const totalSalesToday = salesToday?.total || 0;
+    // Start of week IST (Sunday)
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
 
-const [salesWeek] = await Order.aggregate([
-  { $match: { restaurantId, status: 'served', createdAt: { $gte: startOfWeek } } },
-  { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-]);
-const totalSalesWeek = salesWeek?.total || 0;
+    // Start of month IST
+    const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
 
-const [salesMonth] = await Order.aggregate([
-  { $match: { restaurantId, status: 'served', createdAt: { $gte: startOfMonth } } },
-  { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-]);
-const totalSalesMonth = salesMonth?.total || 0;
+    // --- Aggregations ---
+    const [salesToday] = await Pastorder.aggregate([
+      {
+        $match: {
+          restaurantId,
+          status: 'Paid',
+          createdAt: { $gte: startOfToday, $lt: startOfTomorrow },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]);
+    const totalSalesToday = salesToday?.total || 0;
 
+    const [salesWeek] = await Pastorder.aggregate([
+      { $match: { restaurantId, status: 'Paid', createdAt: { $gte: startOfWeek } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]);
+    const totalSalesWeek = salesWeek?.total || 0;
 
-    const totalOrders = await Order.countDocuments({ restaurantId });
-    const unpaidOrders = await Order.countDocuments({ restaurantId, status: 'pending' });
+    const [salesMonth] = await Pastorder.aggregate([
+      { $match: { restaurantId, status: 'Paid', createdAt: { $gte: startOfMonth } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]);
+    const totalSalesMonth = salesMonth?.total || 0;
 
-    const topItems = await Order.aggregate([
+    // Total orders
+    const totalOrders = await Pastorder.countDocuments({ restaurantId });
+
+    // Unpaid orders
+    const unpaidOrders = await Pastorder.countDocuments({ restaurantId, status: 'pending' });
+
+    // Top 5 items
+    const topItems = await Pastorder.aggregate([
       { $match: { restaurantId } },
       { $unwind: '$items' },
       {
@@ -55,12 +78,12 @@ const totalSalesMonth = salesMonth?.total || 0;
     res.json({
       success: true,
       data: {
-          totalSalesToday,
-          totalSalesWeek,
-          totalSalesMonth,
-          totalOrders,
-          unpaidOrders,
-          topItems,
+        totalSalesToday,
+        totalSalesWeek,
+        totalSalesMonth,
+        totalOrders,
+        unpaidOrders,
+        topItems,
       },
     });
   } catch (err) {
