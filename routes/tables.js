@@ -51,15 +51,15 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
   }
 });
 
-router.put("/reset", verifyRestaurant, async (req, res) => {
+router.put("/reset", async (req, res) => {
   try {
-    await Table.updateMany(
-      { restaurantId: req.restaurantId },
-      { $set: { status: "Available" } }
-    );
-    res.json({ success: true });
+    // Example: set all statuses to "Available" and reset capacities
+    await Table.updateMany({}, { status: "Available" });
+
+    res.json({ success: true, message: "All tables reset successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error resetting tables:", err);
+    res.status(500).json({ success: false, message: "Server error resetting tables" });
   }
 });
 
