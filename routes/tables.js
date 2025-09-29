@@ -52,7 +52,7 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
 });
 
 
-router.put("/reset", async (req, res) => {
+router.put("/reset",verifyRestaurant, async (req, res) => {
   try {
     // Example: set all statuses to "Available" and reset capacities
     await Table.updateMany({}, { status: "Available" });
