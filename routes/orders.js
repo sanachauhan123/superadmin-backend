@@ -77,6 +77,22 @@ router.put('/:id/status', verifyRestaurant, async (req, res) => {
 });
 
 // Delete order
+router.delete('/:id/items/:menuid', verifyRestaurant, async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Remove the item by menuId
+    order.items = order.items.filter(item => item.menuId !== req.params.menuid);
+
+    await order.save();
+
+    res.json({ success: true, message: 'Item deleted successfully', order });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', verifyRestaurant, async (req, res) => {
   try {
     await Order.findOneAndDelete({ _id: req.params.id, restaurantId: req.restaurantId });
