@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyRestaurant } = require('../middleware/auth');
-const Pastorder = require('../models/Order');
+const Pastorder = require('../models/Pastorder');
 
 router.get('/', verifyRestaurant, async (req, res) => {
   try {
