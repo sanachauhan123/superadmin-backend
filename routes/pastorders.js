@@ -16,15 +16,17 @@ router.get('/',verifyRestaurant, async (req, res) => {
 // Create order
 router.post('/', verifyRestaurant, async (req, res) => {
   try {
-    const { tableId, items } = req.body;
+    const { tableId, items, status, _id } = req.body;
     console.log("Received order payload:", req.body);
 
     const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     const order = new Pastorder({
+      _id,
       tableId,
       restaurantId: req.restaurantId,
       items,
+      status, 
       totalAmount
     });
 
@@ -56,21 +58,6 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
   }
 });
 
-
-
-// Update status
-router.put('/:id/status', verifyRestaurant, async (req, res) => {
-  try {
-    const { status } = req.body;
-    await Pastorder.findOneAndUpdate(
-      { _id: req.params.id, restaurantId: req.restaurantId },
-      { status }
-    );
-    res.json({ success: true, message: 'Order status updated' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // Delete order
 router.delete('/:id', verifyRestaurant, async (req, res) => {
