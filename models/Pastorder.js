@@ -14,7 +14,7 @@ const pastorderSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['pending', 'in-kitchen', 'served', 'completed', 'cancelled'],
+    enum: ['pending', 'in-kitchen', 'served', 'completed', 'cancelled', 'Paid'],
     default: 'pending'
   },
   createdAt: {
