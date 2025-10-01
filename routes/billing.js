@@ -92,6 +92,9 @@ router.put('/:id/pay', verifyRestaurant, async (req, res) => {
     if (!order) {
     order = await Completeorder.findOne({ _id: req.params.id});
 }
+    if (!order) {
+  order = await Pastorder.findOne({ _id: req.params.id }); // add this
+}
     if (!order) return res.status(404).json({ error: 'Order not found' });
     const settings = await RestaurantSetting.findOne({ restaurantId: req.restaurantId });
     if (!settings) return res.status(400).json({ error: 'Settings not found' });
