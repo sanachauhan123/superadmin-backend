@@ -14,17 +14,14 @@ router.get('/:id', verifyRestaurant, async (req, res) => {
     // 1️⃣ Fetch order & settings
     let order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId});
 console.log('Order', order);
-
-if (!order) {
-    order = await Pastorder.findOne({ _id: req.params.id});
-    console.log('Pastorder', order);
-}
-
 if (!order) {
     order = await Completeorder.findOne({ _id: req.params.id });
     console.log('CompleteOrder', order);
 }
-
+if (!order) {
+    order = await Pastorder.findOne({ _id: req.params.id});
+    console.log('Pastorder', order);
+}
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     const settings = await RestaurantSetting.findOne({
