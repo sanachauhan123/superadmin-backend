@@ -8,27 +8,25 @@ router.get('/', verifyRestaurant, async (req, res) => {
     const restaurantId = req.restaurantId;
 
     // --- Calculate dates in IST ---
-    const now = new Date();
-    const istOffset = 5.5 * 60; // IST = UTC+5:30 in minutes
-    const nowIST = new Date(now.getTime() + istOffset * 60000);
+   const now = new Date();
 
-    // Start of today IST
-    const startOfToday = new Date(
-      nowIST.getFullYear(),
-      nowIST.getMonth(),
-      nowIST.getDate(),
-      0, 0, 0, 0
-    );
+// Start of today (UTC)
+const startOfToday = new Date(Date.UTC(
+  now.getUTCFullYear(),
+  now.getUTCMonth(),
+  now.getUTCDate(), 0, 0, 0, 0
+));
 
-    const startOfTomorrow = new Date(startOfToday);
-    startOfTomorrow.setDate(startOfToday.getDate() + 1);
+// Start of tomorrow
+const startOfTomorrow = new Date(startOfToday);
+startOfTomorrow.setUTCDate(startOfToday.getUTCDate() + 1);
 
-    // Start of week IST (Sunday)
-    const startOfWeek = new Date(startOfToday);
-    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+// Start of week (Sunday)
+const startOfWeek = new Date(startOfToday);
+startOfWeek.setUTCDate(startOfToday.getUTCDate() - startOfToday.getUTCDay());
 
-    // Start of month IST
-    const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+// Start of month
+const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
     // --- Aggregations ---
     const [salesToday] = await Pastorder.aggregate([
