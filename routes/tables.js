@@ -36,6 +36,18 @@ router.post('/', verifyRestaurant, async (req, res) => {
 });
 
 // UPDATE
+router.put("/reset",verifyRestaurant, async (req, res) => {
+  try {
+    // Example: set all statuses to "Available" and reset capacities
+    await Table.updateMany({ restaurantId: req.restaurantId }, { status: "Available" });
+
+    res.json({ success: true, message: "All tables reset successfully" });
+  } catch (err) {
+    console.error("Error resetting tables:", err);
+    res.status(500).json({ success: false, message: "Server error resetting tables" });
+  }
+});
+
 router.put('/:id', verifyRestaurant, async (req, res) => {
   try {
     const { number, capacity, status } = req.body;
@@ -48,19 +60,6 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
     res.json({ message: 'Table updated successfully', data: updated });
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-
-router.put("/reset",verifyRestaurant, async (req, res) => {
-  try {
-    // Example: set all statuses to "Available" and reset capacities
-    await Table.updateMany({ restaurantId: req.restaurantId }, { status: "Available" });
-
-    res.json({ success: true, message: "All tables reset successfully" });
-  } catch (err) {
-    console.error("Error resetting tables:", err);
-    res.status(500).json({ success: false, message: "Server error resetting tables" });
   }
 });
 
