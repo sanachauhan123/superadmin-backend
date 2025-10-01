@@ -8,25 +8,45 @@ router.get('/', verifyRestaurant, async (req, res) => {
     const restaurantId = req.restaurantId;
 
     // --- Calculate dates in IST ---
-   const now = new Date();
+const now = new Date();
 
-// Start of today (UTC)
-const startOfToday = new Date(Date.UTC(
-  now.getUTCFullYear(),
-  now.getUTCMonth(),
-  now.getUTCDate(), 0, 0, 0, 0
-));
+// IST offset in minutes
+const IST_OFFSET = 330; // 5 hours 30 minutes
 
-// Start of tomorrow
+// Helper to get IST date from UTC
+function getISTDate(date) {
+  return new Date(date.getTime() + IST_OFFSET * 60000);
+}
+
+// Start of today IST
+const nowIST = getISTDate(now);
+const startOfToday = new Date(
+  nowIST.getFullYear(),
+  nowIST.getMonth(),
+  nowIST.getDate(),
+  0, 0, 0, 0
+);
+
+// Start of tomorrow IST
 const startOfTomorrow = new Date(startOfToday);
-startOfTomorrow.setUTCDate(startOfToday.getUTCDate() + 1);
+startOfTomorrow.setDate(startOfToday.getDate() + 1);
 
-// Start of week (Sunday)
+// Start of week IST (Sunday)
 const startOfWeek = new Date(startOfToday);
-startOfWeek.setUTCDate(startOfToday.getUTCDate() - startOfToday.getUTCDay());
+startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
 
-// Start of month
-const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+// Start of month IST
+const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+
+// Convert back to UTC for MongoDB query
+function toUTC(date) {
+  return new Date(date.getTime() - IST_OFFSET * 60000);
+}
+
+const startOfTodayUTC = toUTC(startOfToday);
+const startOfTomorrowUTC = toUTC(startOfTomorrow);
+const startOfWeekUTC = toUTC(startOfWeek);
+const startOfMonthUTC = toUTC(startOfMonth);
 
     // --- Aggregations ---
     const [salesToday] = await Pastorder.aggregate([
@@ -47,31 +67,38 @@ const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 
     ]);
     const totalSalesWeek = salesWeek?.total || 0;
 
-    const [salesMonth] = await Pastorder.aggregate([
-      { $match: { restaurantId, status: 'Paid', createdAt: { $gte: startOfMonth } } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-    ]);
-    const totalSalesMonth = salesMonth?.total || 0;
+   const [salesToday] = await Pastorder.aggregate([
+  {
+    $match: {
+      restaurantId,
+      status: 'Paid',
+      createdAt: { $gte: startOfTodayUTC, $lt: startOfTomorrowUTC },
+    },
+  },
+  { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+]);
 
-    // Total orders
-    const totalOrders = await Pastorder.countDocuments({ restaurantId });
+const [salesWeek] = await Pastorder.aggregate([
+  {
+    $match: {
+      restaurantId,
+      status: 'Paid',
+      createdAt: { $gte: startOfWeekUTC },
+    },
+  },
+  { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+]);
 
-    // Unpaid orders
-    const unpaidOrders = await Pastorder.countDocuments({ restaurantId, status: 'pending' });
-
-    // Top 5 items
-    const topItems = await Pastorder.aggregate([
-      { $match: { restaurantId } },
-      { $unwind: '$items' },
-      {
-        $group: {
-          _id: '$items.name',
-          totalSold: { $sum: '$items.quantity' },
-        },
-      },
-      { $sort: { totalSold: -1 } },
-      { $limit: 5 },
-    ]);
+const [salesMonth] = await Pastorder.aggregate([
+  {
+    $match: {
+      restaurantId,
+      status: 'Paid',
+      createdAt: { $gte: startOfMonthUTC },
+    },
+  },
+  { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+]);
 
     res.json({
       success: true,
