@@ -32,7 +32,7 @@ const menuRoutes = require('./routes/menu');
 app.use('/api/menu', menuRoutes);
 
 // Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const categoryRoutes = require('./routes/categories');
 app.use('/api/categories', categoryRoutes);
