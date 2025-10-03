@@ -23,7 +23,7 @@ router.post('/', verifyRestaurant, upload.single('image'), async(req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
   // const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  const imageUrl = req.file.filename;
+  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ success: true, imageUrl });
 });
 
