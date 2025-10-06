@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin');
+const Waiter = require('../models/Waiter');
 const {auth} = require('../middleware/auth');
 
 // Register Admin
@@ -10,11 +10,11 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingAdmin = await Admin.findOne({ email });
+    const existingAdmin = await Waiter.findOne({ email });
     if (existingAdmin) return res.status(400).json({ error: 'Admin already exists' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = new Admin({ name, email, password: hashedPassword });
+    const admin = new Waiter({ name, email, password: hashedPassword });
     await admin.save();
 
     res.status(201).json({ message: 'Admin registered successfully' });
@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ email });
+    const admin = await Waiter.findOne({ email });
     if (!admin) return res.status(400).json({ error: 'Invalid email or password' });
 
     const isMatch = await bcrypt.compare(password, admin.password);
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
 // Get all admins
 router.get('/', async (req, res) => {
   try {
-    const admins = await Admin.find({}, '-password');
+    const admins = await Waiter.find({}, '-password');
     res.json({ success: true, data: admins });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { name, email } = req.body;
-    const updated = await Admin.findByIdAndUpdate(
+    const updated = await Waiter.findByIdAndUpdate(
       req.params.id,
       { name, email },
       { new: true }
@@ -69,7 +69,7 @@ router.put('/:id', auth, async (req, res) => {
 // Delete admin
 router.delete('/:id', auth, async (req, res) => {
   try {
-    await Admin.findByIdAndDelete(req.params.id);
+    await Waiter.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Admin deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
