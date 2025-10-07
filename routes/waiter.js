@@ -3,6 +3,7 @@ const router = express.Router();
 const Waiter = require("../models/Waiter");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { verifyRestaurant } = require('../middleware/auth');
 
 // CREATE waiter
 router.post('/',verifyRestaurant, async (req, res) => {
