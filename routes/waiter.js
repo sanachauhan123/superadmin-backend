@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 // CREATE waiter
-router.post('/', async (req, res) => {
+router.post('/',verifyRestaurant, async (req, res) => {
   console.log("Incoming request body:", req.body);
 
   try {
@@ -56,7 +56,7 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE waiter
-router.put("/:id", async (req, res) => {
+router.put("/:id",verifyRestaurant, async (req, res) => {
   try {
     const { name, email, password, restaurant, image } = req.body;
     const updateData = { name, email, restaurant, image };
