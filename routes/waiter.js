@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Email already in use' });
     }
 
-    if (!name || !email || !password || !restaurant) {
+    if (!name || !email || !password || !restaurant || !restaurantId) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
