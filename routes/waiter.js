@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
   console.log("Incoming request body:", req.body);
 
   try {
-    const { name, email, password, restaurant, image, restaurantId  } = req.body;
+    const { name, email, password, restaurant, image  } = req.body;
 
     const existing = await Waiter.findOne({ email });
     if (existing) {
