@@ -5,24 +5,45 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 // CREATE waiter
-router.post("/", async (req, res) => {
+router.post('/', async (req, res) => {
+  console.log("Incoming request body:", req.body);
+
   try {
-    const { name, email, password, restaurantId } = req.body;
-    if (!name || !email || !password || !restaurantId)
-      return res.status(400).json({ error: "All fields are required" });
+    const { name, email, password } = req.body;
 
     const existing = await Waiter.findOne({ email });
-    if (existing) return res.status(400).json({ error: "Email already in use" });
+    if (existing) {
+    return res.status(400).json({ error: 'Email already in use' });
+    }
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const restaurantId = `res-${Date.now()}`;
+
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const waiter = new Waiter({ name, email, password: hashedPassword, restaurantId });
+
+    // ✅ Save restaurant with hashed password
+    const waiter = new Waiter({
+      name,
+      email,
+      password: hashedPassword,
+      restaurantId
+    });
+
     await waiter.save();
 
+    // ✅ Hide password before sending response
     const response = waiter.toObject();
     delete response.password;
+
     res.status(201).json({ success: true, data: response });
   } catch (err) {
+    console.error("Error:", err);
     res.status(500).json({ success: false, error: err.message });
+
   }
 });
 
