@@ -9,14 +9,14 @@ router.post('/', async (req, res) => {
   console.log("Incoming request body:", req.body);
 
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, restaurant, image } = req.body;
 
     const existing = await Waiter.findOne({ email });
     if (existing) {
     return res.status(400).json({ error: 'Email already in use' });
     }
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !restaurant) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -30,7 +30,9 @@ router.post('/', async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      restaurantId
+      restaurantId,
+      restaurant,
+      image,
     });
 
     await waiter.save();
@@ -56,8 +58,8 @@ router.get("/", async (req, res) => {
 // UPDATE waiter
 router.put("/:id", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const updateData = { name, email };
+    const { name, email, password, restaurant, image } = req.body;
+    const updateData = { name, email, restaurant, image };
 
     if (password) updateData.password = await bcrypt.hash(password, 10);
 
