@@ -21,7 +21,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const restaurantId = `res-${Date.now()}`;
+     const restaurantRecord = await Restaurant.findOne({ name: restaurant });
+    if (!restaurantRecord) {
+      return res.status(400).json({ error: "Restaurant not found" });
+    }
+
+    const restaurantId = restaurantRecord.restaurantId;
+    console.log(restaurantId)
 
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
