@@ -11,6 +11,7 @@ router.post('/',verifyRestaurant, async (req, res) => {
 
   try {
     const { name, email, password, restaurant, image, restaurantId  } = req.body;
+    console.log(restaurantId)
 
     const existing = await Waiter.findOne({ email });
     if (existing) {
