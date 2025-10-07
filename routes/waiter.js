@@ -3,12 +3,10 @@ const router = express.Router();
 const Waiter = require("../models/Waiter");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { verifyRestaurant } = require('../middleware/auth');
 
 // CREATE waiter
-router.post('/',verifyRestaurant, async (req, res) => {
+router.post('/', async (req, res) => {
   console.log("Incoming request body:", req.body);
-  console.log('req.restaurantId =>', req.restaurantId); 
 
   try {
     const { name, email, password, restaurant, image  } = req.body;
@@ -23,7 +21,7 @@ router.post('/',verifyRestaurant, async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    //const restaurantId = `res-${Date.now()}`;
+    const restaurantId = `res-${Date.now()}`;
 
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -33,7 +31,7 @@ router.post('/',verifyRestaurant, async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      restaurantId: req.restaurantId,
+      restaurantId,
       restaurant,
       image,
     });
@@ -59,7 +57,7 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE waiter
-router.put("/:id",verifyRestaurant, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { name, email, password, restaurant, image } = req.body;
     const updateData = { name, email, restaurant, image };
