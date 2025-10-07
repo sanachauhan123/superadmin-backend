@@ -8,6 +8,7 @@ const { verifyRestaurant } = require('../middleware/auth');
 // CREATE waiter
 router.post('/',verifyRestaurant, async (req, res) => {
   console.log("Incoming request body:", req.body);
+  console.log('req.restaurantId =>', req.restaurantId); 
 
   try {
     const { name, email, password, restaurant, image  } = req.body;
