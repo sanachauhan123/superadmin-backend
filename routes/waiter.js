@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Email already in use' });
     }
 
-    if (!name || !email || !password || !restaurant || !restaurantId) {
+    if (!name || !email || !password || !restaurant) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      restaurantId,
+      restaurantId: req.restaurantId,
       restaurant,
       image,
     });
