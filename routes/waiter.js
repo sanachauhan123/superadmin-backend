@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const restaurantId = `res-${Date.now()}`;
+    //const restaurantId = `res-${Date.now()}`;
 
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
