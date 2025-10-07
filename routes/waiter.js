@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Waiter = require("../models/Waiter");
+const Restaurant = require("../models/Restaurant");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
