@@ -10,8 +10,8 @@ router.post('/',verifyRestaurant, async (req, res) => {
   console.log("Incoming request body:", req.body);
 
   try {
-    const { name, email, password, restaurant, image, restaurantId  } = req.body;
-    console.log(restaurantId)
+    const { name, email, password, restaurant, image  } = req.body;
+    //console.log(restaurantId)
 
     const existing = await Waiter.findOne({ email });
     if (existing) {
@@ -32,7 +32,7 @@ router.post('/',verifyRestaurant, async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      restaurantId,
+      restaurantId: req.restaurantId,
       restaurant,
       image,
     });
