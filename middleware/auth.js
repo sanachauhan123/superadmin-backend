@@ -49,7 +49,7 @@ const verifyRestaurant = (req, res, next) => {
       return res.status(400).json({ error: 'Invalid token. Restaurant ID missing.' });
     }
 
-    req.restaurantId = restaurantId;
+    req.restaurantId = decoded.restaurantId;
     next();
   } catch (err) {
     //console.log('JWT verification error:', err.message);
