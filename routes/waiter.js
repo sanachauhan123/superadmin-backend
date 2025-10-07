@@ -103,6 +103,8 @@ router.post("/login", async (req, res) => {
         name: waiter.name,
         email: waiter.email,
         restaurantId: waiter.restaurantId,
+        restaurant: waiter.restaurant,
+        image: waiter.image || null,
       },
     });
   } catch (err) {
