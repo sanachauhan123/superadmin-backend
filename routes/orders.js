@@ -23,12 +23,19 @@ router.post('/', verifyRestaurant, async (req, res) => {
     const { tableId, items } = req.body;
     console.log("Received order payload:", req.body);
 
-    const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const itemsWithStatus = items.map(item => ({
+      ...item,
+      status: 'pending'
+    }));
 
+    const totalAmount = itemsWithStatus.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
     const order = new Order({
       tableId,
       restaurantId: req.restaurantId,
-      items,
+      items: itemsWithStatus,
       totalAmount
     });
 
@@ -39,6 +46,29 @@ router.post('/', verifyRestaurant, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Update specific item status
+router.put('/:orderId/items/:itemId/status', verifyRestaurant, async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const order = await Order.findOne({ _id: req.params.orderId, restaurantId: req.restaurantId });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Find the item and update its status
+    const item = order.items.id(req.params.itemId);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+
+    item.status = status;
+
+    await order.save();
+
+    res.json({ success: true, message: 'Item status updated', order });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 router.put('/:id', verifyRestaurant, async (req, res) => {
   try {
