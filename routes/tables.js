@@ -6,6 +6,7 @@ const { verifyRestaurant } = require('../middleware/auth');
 // GET all tables
 router.get('/',verifyRestaurant, async (req, res) => {
   try {
+     console.log(req.restaurantId)
     //const tables = await Table.find({ restaurantId: req.restaurantId });
     const tables = await Table.find({restaurantId: req.restaurantId});
     res.json({ data: tables });
