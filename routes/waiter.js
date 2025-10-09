@@ -64,30 +64,25 @@ router.get("/", async (req, res) => {
 });
 
 // UPDATE waiter
-router.put('/:id', upload.single('image'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const { name, email, password, restaurant } = req.body;
-    const updateData = { name, email, restaurant };
+    const { name, email, password, restaurant, image } = req.body;
+    const updateData = {};
 
-    if (password) updateData.password = await bcrypt.hash(password, 10);
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (restaurant) updateData.restaurant = restaurant;
+    if (image) updateData.image = image; // already hosted Cloudinary URL
 
-    // handle uploaded file
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'waiter_profiles',
-      });
-      // cleanup temp file
-      fs.unlinkSync(req.file.path);
-      updateData.image = result.secure_url;
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
-    // Optional: prevent email duplication
-    if (email) {
-      const exists = await Waiter.findOne({ email, _id: { $ne: req.params.id } });
-      if (exists) return res.status(400).json({ error: 'Email already in use' });
-    }
+    const exists = await Waiter.findOne({ email, _id: { $ne: req.params.id } });
+    if (exists) return res.status(400).json({ error: "Email already in use" });
 
-    const waiter = await Waiter.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-password');
+    const waiter = await Waiter.findByIdAndUpdate(req.params.id, updateData, { new: true }).select("-password");
+
     if (!waiter) return res.status(404).json({ error: "Waiter not found" });
 
     res.json({ success: true, data: waiter });
@@ -96,6 +91,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 
 // DELETE waiter
