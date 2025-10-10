@@ -83,19 +83,20 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Loop through incoming items (newly added from waiter)
+    // Track existing item IDs or menuIds (to avoid duplicates)
+    const existingItems = order.items;
+
     items.forEach((newItem) => {
-      const existingItem = order.items.find(
+      // Try to find same item in existing list (not served)
+      const existingItem = existingItems.find(
         (i) =>
-          i.name === newItem.name &&
-          i.status !== "served" // only merge with non-served ones
+          i.menuId === newItem.menuId &&
+          i.status !== "served"
       );
 
-      if (existingItem) {
-        // If same item still pending/in-kitchen, just increase qty
-        existingItem.quantity += newItem.quantity;
-      } else {
-        // Else add as a new separate pending item
+      // ✅ Only merge if it's really new addition (not duplicate from frontend resend)
+      if (!existingItem) {
+        // Add as a new pending item
         order.items.push({
           name: newItem.name,
           quantity: newItem.quantity,
@@ -106,10 +107,8 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
       }
     });
 
-    // Optionally update order status (if needed)
-    if (status) {
-      order.status = status;
-    }
+    // Optionally update order status
+    if (status) order.status = status;
 
     // Recalculate totalAmount
     order.totalAmount = order.items.reduce(
@@ -121,13 +120,14 @@ router.put('/:id', verifyRestaurant, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Order updated with new items",
+      message: "Order updated safely with new items",
       data: order,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
