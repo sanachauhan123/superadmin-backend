@@ -8,13 +8,25 @@ router.get('/', verifyRestaurant, async (req, res) => {
   try {
     // Fetch only orders for the logged-in restaurant
     const orders = await Order.find({ restaurantId: req.restaurantId })
-                              .sort({ createdAt: -1 });
+                              .sort({ createdAt: -1 })
+                              .lean(); // use .lean() to get plain JS objects
 
-    res.json({ success: true, data: orders });
+    // Ensure every item has a status (default to 'pending') and compute total if missing
+    const formattedOrders = orders.map((order) => ({
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        status: item.status || "pending",
+      })),
+      totalAmount: order.totalAmount || order.items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    }));
+
+    res.json({ success: true, data: formattedOrders });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 // Create order
