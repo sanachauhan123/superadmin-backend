@@ -72,65 +72,23 @@ router.put('/:orderId/items/:itemId/status', verifyRestaurant, async (req, res) 
 
 router.put('/:id', verifyRestaurant, async (req, res) => {
   try {
-    const { items, status } = req.body;
+    const updates = req.body;
 
-    const order = await Order.findOne({
-      _id: req.params.id,
-      restaurantId: req.restaurantId,
-    });
+    const result = await Order.findOneAndUpdate(
+      { _id: req.params.id, restaurantId: req.restaurantId },
+      updates,
+      { new: true }
+    );
 
-    if (!order) {
+    if (!result) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Track existing item IDs or menuIds (to avoid duplicates)
-    const existingItems = order.items;
-
-    items.forEach((newItem) => {
-      // Try to find same item in existing list (not served)
-      const existingItem = existingItems.find(
-        (i) =>
-          i.menuId === newItem.menuId &&
-          i.status !== "served"
-      );
-
-      // ✅ Only merge if it's really new addition (not duplicate from frontend resend)
-      if (!existingItem) {
-        // Add as a new pending item
-        order.items.push({
-          name: newItem.name,
-          quantity: newItem.quantity,
-          price: newItem.price,
-          status: "pending",
-          menuId: newItem.menuId,
-        });
-      }
-    });
-
-    // Optionally update order status
-    if (status) order.status = status;
-
-    // Recalculate totalAmount
-    order.totalAmount = order.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    await order.save();
-
-    res.json({
-      success: true,
-      message: "Order updated safely with new items",
-      data: order,
-    });
+    res.json({ success: true, message: 'Order updated', data: result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
-
-
-
 
 // Update status
 router.put('/:id/status', verifyRestaurant, async (req, res) => {
