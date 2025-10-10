@@ -50,30 +50,6 @@ router.post('/', verifyRestaurant, async (req, res) => {
   }
 });
 
-// Add items to an existing order (new entries)
-// Add items to existing order
-router.put('/:id/add-items', verifyRestaurant, async (req, res) => {
-  try {
-    const { items } = req.body; // items: [{ menuId, name, quantity, price }]
-    const order = await Order.findOne({ _id: req.params.id, restaurantId: req.restaurantId });
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-
-    // Append new items as pending (do not merge with served)
-    const newItemsWithStatus = items.map(item => ({ ...item, status: 'pending' }));
-
-    order.items.push(...newItemsWithStatus);
-
-    // Update total amount
-    order.totalAmount = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-    await order.save();
-    res.json({ success: true, message: 'Items added', order });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
 // Update specific item status
 router.put('/:orderId/items/:itemId/status', verifyRestaurant, async (req, res) => {
   try {
