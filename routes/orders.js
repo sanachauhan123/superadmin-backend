@@ -18,30 +18,76 @@ router.get('/', verifyRestaurant, async (req, res) => {
 
 
 // Create order
+// Create or update order
 router.post('/', verifyRestaurant, async (req, res) => {
   try {
     const { tableId, items } = req.body;
     console.log("Received order payload:", req.body);
 
-      const itemsWithStatus = items.map(item => ({
-      ...item,
-      status: 'pending'
-    }));
-
-    const totalAmount = itemsWithStatus.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const order = new Order({
+    // Check if there's already an active order for the same table
+    let order = await Order.findOne({
       tableId,
       restaurantId: req.restaurantId,
-      items: itemsWithStatus,
-      totalAmount
+      status: { $in: ["pending", "in-kitchen"] }, // active order
     });
 
-    await order.save();
+    if (order) {
+      // If order exists → merge items smartly
+      items.forEach((newItem) => {
+        const existingItem = order.items.find(
+          (item) =>
+            item.menuId === newItem.menuId &&
+            (item.status === "pending" || item.status === "in-kitchen")
+        );
 
-    res.status(201).json({ success: true, message: 'Order created', data: order });
+        if (existingItem) {
+          // If same item is still pending/in-kitchen, increase qty
+          existingItem.quantity += newItem.quantity;
+        } else {
+          // Else add as a new separate pending item
+          order.items.push({
+            ...newItem,
+            status: "pending",
+          });
+        }
+      });
+
+      // Recalculate total
+      order.totalAmount = order.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+
+      await order.save();
+      return res.json({
+        success: true,
+        message: "Order updated with new items",
+        data: order,
+      });
+    } else {
+      // If no active order, create new
+      const itemsWithStatus = items.map((item) => ({
+        ...item,
+        status: "pending",
+      }));
+
+      const totalAmount = itemsWithStatus.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+
+      const newOrder = new Order({
+        tableId,
+        restaurantId: req.restaurantId,
+        items: itemsWithStatus,
+        totalAmount,
+      });
+
+      await newOrder.save();
+      return res
+        .status(201)
+        .json({ success: true, message: "New order created", data: newOrder });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
