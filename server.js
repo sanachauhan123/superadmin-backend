@@ -67,10 +67,8 @@ app.use('/api/dashboard', dashboardRoutes);
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
-// Optional: Serve temp uploads in Render
-const tempUploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(tempUploadDir)) fs.mkdirSync(tempUploadDir, { recursive: true });
-app.use('/uploads', express.static(tempUploadDir));
+const uploadRoutes = require('./routes/upload'); // Optional placeholder
+app.use('/api/upload', uploadRoutes); // Placeholder route
 
 const PORT = process.env.PORT;
 
