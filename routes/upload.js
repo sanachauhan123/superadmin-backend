@@ -17,9 +17,9 @@ router.post('/', verifyRestaurant, upload.single('image'), async (req, res) => {
 
   try {
     await client.access({
-      host: 'your-cpanel-domain.com', // e.g., stridedge.tech
-      user: 'cpanel-username',
-      password: 'cpanel-password',
+      host: 'stridedge.tech', // e.g., stridedge.tech
+      user: 'stridedgetech',
+      password: '0zp$.{uFa1nB',
       secure: true, // or false if plain FTP
     });
 
