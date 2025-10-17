@@ -1,30 +1,44 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const ftp = require('basic-ftp');
 const path = require('path');
 const { verifyRestaurant } = require('../middleware/auth');
 
-// ✅ Storage setup (Uploads to /uploads folder)
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Make sure this folder exists
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${file.fieldname}${ext}`);
-  },
-});
-
+// Store file in memory temporarily
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// ✅ POST /api/upload
-router.post('/', verifyRestaurant, upload.single('image'), async(req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+router.post('/', verifyRestaurant, upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const client = new ftp.Client();
+  client.ftp.verbose = true;
+
+  try {
+    await client.access({
+      host: 'your-cpanel-domain.com', // e.g., stridedge.tech
+      user: 'cpanel-username',
+      password: 'cpanel-password',
+      secure: true, // or false if plain FTP
+    });
+
+    // Change to your uploads folder on cPanel
+    await client.ensureDir('/public_html/uploads');
+
+    // Upload file from buffer
+    const filename = `${Date.now()}-${req.file.originalname}`;
+    await client.uploadFrom(Buffer.from(req.file.buffer), filename);
+
+    client.close();
+
+    // URL to access file
+    const imageUrl = `https://your-domain.com/uploads/${filename}`;
+    res.json({ success: true, imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Upload to cPanel failed' });
   }
-  // const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  const imageUrl = `${req.file.filename}`;
-  res.json({ success: true, imageUrl });
 });
 
 module.exports = router;
