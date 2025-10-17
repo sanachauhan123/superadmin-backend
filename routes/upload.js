@@ -33,7 +33,7 @@ router.post('/', verifyRestaurant, upload.single('image'), async (req, res) => {
     client.close();
 
     // URL to access file
-    const imageUrl = `https://your-domain.com/uploads/${filename}`;
+    const imageUrl = `https://stridedge.tech/uploads/${filename}`;
     res.json({ success: true, imageUrl });
   } catch (err) {
     console.error(err);
