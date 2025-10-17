@@ -67,9 +67,6 @@ app.use('/api/dashboard', dashboardRoutes);
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
-const uploadRoutes = require('./routes/upload'); // Optional placeholder
-app.use('/api/upload', uploadRoutes); // Placeholder route
-
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
