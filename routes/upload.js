@@ -5,7 +5,6 @@ const cloudinary = require('cloudinary').v2;
 const { verifyRestaurant } = require('../middleware/auth');
 const fs = require('fs');
 const path = require('path');
-
 // Configure Cloudinary
 // cloudinary.config({
 //   cloud_name: process.env.CLOUD_NAME,
