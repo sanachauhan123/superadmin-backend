@@ -38,11 +38,12 @@ app.use('/api/menu', menuRoutes);
 // // Serve uploaded images statically
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists (persistent disk recommended on Render)
+
+// Absolute path to public_html/uploads (adjust if your Node folder structure is different)
 const uploadDir = path.join(__dirname, '../public_html/uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Serve uploads statically
+// Optional: serve static files via Node (not strictly needed if Apache serves public_html)
 app.use('/uploads', express.static(uploadDir));
 
 const categoryRoutes = require('./routes/categories');
