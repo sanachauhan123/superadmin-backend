@@ -25,7 +25,7 @@ router.post('/', verifyRestaurant, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   // Return temp URL (for reference, frontend will use cPanel URL manually)
-  const imageUrl = `/uploads/${req.file.filename}`;
+  const imageUrl = `${req.file.filename}`;
   res.json({ success: true, imageUrl, filename: req.file.filename });
 });
 
