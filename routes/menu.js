@@ -3,11 +3,17 @@ const router = express.Router();
 const Menu = require('../models/Menu');
 const { verifyRestaurant } = require('../middleware/auth');
 
-// Get all menu items
 router.get('/', verifyRestaurant, async (req, res) => {
   try {
-    const items = await Menu.find({ restaurantId: req.restaurantId });
-    //console.log('req.restaurantId:', req.restaurantId);
+    const { available } = req.query; // e.g. /api/menu?available=true
+    const filter = { restaurantId: req.restaurantId };
+
+    // If query includes available=true, only return available items
+    if (available === 'true') {
+      filter.available = true;
+    }
+
+    const items = await Menu.find(filter);
     res.json({ data: items });
   } catch (err) {
     res.status(500).json({ error: err.message });
