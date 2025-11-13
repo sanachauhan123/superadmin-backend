@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 app.use(cors());
@@ -19,7 +21,30 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('MongoDB connection error:', err);
 });
 
+// Create HTTP server for Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
+
+// Track connections
+io.on("connection", (socket) => {
+  console.log("Waiter connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Waiter disconnected:", socket.id);
+  });
+});
+
+
 // Routes
+// REST route to trigger notification
+app.post("/api/notify", (req, res) => {
+  const { table, message } = req.body;
+  io.emit("kitchen-notif", { table, message }); // send to all connected clients
+  res.json({ success: true });
+});
+
 const restaurantRoutes = require('./routes/restaurant');
 app.use('/api/restaurants', restaurantRoutes);
 
