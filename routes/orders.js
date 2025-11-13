@@ -4,7 +4,7 @@ const Order = require('../models/Order');
 const { verifyRestaurant } = require('../middleware/auth');
 
 // Get all orders (for Super Admin)
-router.get('/', verifyRestaurant, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     // Fetch only orders for the logged-in restaurant
     const orders = await Order.find({ restaurantId: req.restaurantId })
