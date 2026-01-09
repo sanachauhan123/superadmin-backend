@@ -77,7 +77,7 @@ app.post("/saveToken", (req, res) => {
   const { fcmtoken } = req.body;
 
   if (!fcmtoken) {
-    return res.status(400).json({ error: "FCM token missing" });
+   res.status(400).json({ error: "FCM token missing" });
   }
 
   // Remove old record if same device sends again
