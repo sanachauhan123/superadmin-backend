@@ -37,7 +37,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.post("/sendNotification", async (req, res) => {
+app.post("/api/sendNotification", async (req, res) => {
   const { token, title, body, data } = req.body;
 
   if (!token) {
@@ -64,7 +64,7 @@ app.post("/sendNotification", async (req, res) => {
 
 let tokens = []; // use DB in production
 
-app.post("/saveToken", (req, res) => {
+app.post("/api/saveToken", (req, res) => {
   const { fcmtoken } = req.body;
 
   if (!fcmtoken) {
@@ -83,7 +83,7 @@ app.post("/saveToken", (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/getDeviceToken", (req, res) => {
+app.get("/api/getDeviceToken", (req, res) => {
   if (tokens.length === 0) {
     return res.status(404).json({ error: "No device registered" });
   }
