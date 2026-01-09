@@ -74,7 +74,7 @@ app.post("/sendNotification", async (req, res) => {
 let tokens = []; // use DB in production
 
 app.post("/saveToken", (req, res) => {
-  const { fcmtoken, waiterId } = req.body;
+  const { fcmtoken } = req.body;
 
   if (!fcmtoken) {
     return res.status(400).json({ error: "FCM token missing" });
@@ -85,13 +85,23 @@ app.post("/saveToken", (req, res) => {
 
   tokens.push({
     fcmtoken,
-    waiterId,
+
   });
 
   console.log("📱 Registered devices:", tokens);
   res.json({ success: true });
 });
 
+app.get("/getDeviceToken", (req, res) => {
+  if (tokens.length === 0) {
+    return res.status(404).json({ error: "No device registered" });
+  }
+
+  // Send the latest registered token
+  const latestDevice = tokens[tokens.length - 1];
+
+  res.json({ token: latestDevice.fcmtoken });
+});
 
 
 // // Routes
