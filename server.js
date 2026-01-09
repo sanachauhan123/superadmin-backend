@@ -10,8 +10,9 @@ import admin from "firebase-admin";
 
 // Load JSON safely
 const serviceAccount = JSON.parse(
-  fs.readFileSync("./firebaseAdmin.json", "utf8")
+  fs.readFileSync(path.join(__dirname, "firebaseAdmin.json"), "utf8")
 );
+
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
