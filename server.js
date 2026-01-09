@@ -1,4 +1,5 @@
-require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,6 +8,10 @@ const fs = require('fs');
 const http = require("http");
 const { Server } = require("socket.io");
 import admin from "firebase-admin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 // Load JSON safely
 const serviceAccount = JSON.parse(
