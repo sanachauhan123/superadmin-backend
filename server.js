@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -38,62 +37,62 @@ io.on("connection", (socket) => {
   });
 });
 
-app.post("/sendNotification", async (req, res) => {
-  const { token, title, body, data } = req.body;
+// app.post("/sendNotification", async (req, res) => {
+//   const { token, title, body, data } = req.body;
 
-  if (!token) {
-    return res.status(400).json({ error: "FCM token required" });
-  }
+//   if (!token) {
+//     return res.status(400).json({ error: "FCM token required" });
+//   }
 
-  const message = {
-    token,
-    notification: {
-      title,
-      body,
-    },
-    data: data || {},
-  };
+//   const message = {
+//     token,
+//     notification: {
+//       title,
+//       body,
+//     },
+//     data: data || {},
+//   };
 
-  try {
-    const response = await admin.messaging().send(message);
-    res.json({ success: true, response });
-  } catch (error) {
-    console.error("FCM Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+//   try {
+//     const response = await admin.messaging().send(message);
+//     res.json({ success: true, response });
+//   } catch (error) {
+//     console.error("FCM Error:", error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
-let tokens = []; // use DB in production
+// let tokens = []; // use DB in production
 
-app.post("/saveToken", (req, res) => {
-  const { fcmtoken } = req.body;
+// app.post("/saveToken", (req, res) => {
+//   const { fcmtoken } = req.body;
 
-  if (!fcmtoken) {
-   res.status(400).json({ error: "FCM token missing" });
-  }
+//   if (!fcmtoken) {
+//    res.status(400).json({ error: "FCM token missing" });
+//   }
 
-  // Remove old record if same device sends again
-  tokens = tokens.filter(t => t.fcmtoken !== fcmtoken);
+//   // Remove old record if same device sends again
+//   tokens = tokens.filter(t => t.fcmtoken !== fcmtoken);
 
-  tokens.push({
-    fcmtoken,
+//   tokens.push({
+//     fcmtoken,
 
-  });
+//   });
 
-  console.log("📱 Registered devices:", tokens);
-  res.json({ success: true });
-});
+//   console.log("📱 Registered devices:", tokens);
+//   res.json({ success: true });
+// });
 
-app.get("/getDeviceToken", (req, res) => {
-  if (tokens.length === 0) {
-    return res.status(404).json({ error: "No device registered" });
-  }
+// app.get("/getDeviceToken", (req, res) => {
+//   if (tokens.length === 0) {
+//     return res.status(404).json({ error: "No device registered" });
+//   }
 
-  // Send the latest registered token
-  const latestDevice = tokens[tokens.length - 1];
+//   // Send the latest registered token
+//   const latestDevice = tokens[tokens.length - 1];
 
-  res.json({ token: latestDevice.fcmtoken });
-});
+//   res.json({ token: latestDevice.fcmtoken });
+// });
 
 
 // // Routes
