@@ -71,25 +71,36 @@ app.post("/sendNotification", async (req, res) => {
   }
 });
 
-app.post("/saveToken", async (req, res) => {
-  const { waiterId, fcmToken } = req.body;
+let tokens = []; // use DB in production
 
-  await Waiters.update(
-    { fcmToken },
-    { where: { id: waiterId } }
-  );
+app.post("/saveToken", (req, res) => {
+  const { fcmtoken, waiterId } = req.body;
 
+  if (!fcmtoken) {
+    return res.status(400).json({ error: "FCM token missing" });
+  }
+
+  // Remove old record if same device sends again
+  tokens = tokens.filter(t => t.fcmtoken !== fcmtoken);
+
+  tokens.push({
+    fcmtoken,
+    waiterId,
+  });
+
+  console.log("📱 Registered devices:", tokens);
   res.json({ success: true });
 });
 
 
-// Routes
-// REST route to trigger notification
-app.post("/api/notify", (req, res) => {
-  const { table, message } = req.body;
-  io.emit("kitchen-notif", { table, message }); // send to all connected clients
-  res.json({ success: true });
-});
+
+// // Routes
+// // REST route to trigger notification
+// app.post("/api/notify", (req, res) => {
+//   const { table, message } = req.body;
+//   io.emit("kitchen-notif", { table, message }); // send to all connected clients
+//   res.json({ success: true });
+// });
 
 const restaurantRoutes = require('./routes/restaurant');
 app.use('/api/restaurants', restaurantRoutes);
