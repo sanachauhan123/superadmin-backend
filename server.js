@@ -9,20 +9,6 @@ const http = require("http");
 const { Server } = require("socket.io");
 import admin from "firebase-admin";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
-// Load JSON safely
-const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "firebaseAdmin.json"), "utf8")
-);
-
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
 const app = express();
 app.use(cors());
 app.use(express.json());
