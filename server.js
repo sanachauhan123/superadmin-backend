@@ -6,6 +6,16 @@ const path = require('path');
 const fs = require('fs');
 const http = require("http");
 const { Server } = require("socket.io");
+import admin from "firebase-admin";
+
+// Load JSON safely
+const serviceAccount = JSON.parse(
+  fs.readFileSync("./firebaseAdmin.json", "utf8")
+);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 const app = express();
 app.use(cors());
@@ -34,6 +44,42 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Waiter disconnected:", socket.id);
   });
+});
+
+app.post("/sendNotification", async (req, res) => {
+  const { token, title, body, data } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ error: "FCM token required" });
+  }
+
+  const message = {
+    token,
+    notification: {
+      title,
+      body,
+    },
+    data: data || {},
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error("FCM Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/saveToken", async (req, res) => {
+  const { waiterId, fcmToken } = req.body;
+
+  await Waiters.update(
+    { fcmToken },
+    { where: { id: waiterId } }
+  );
+
+  res.json({ success: true });
 });
 
 
